@@ -26,6 +26,7 @@ class MahjongVisualizer:
         'winner_zone': (85, 107, 47),   # dark olive green
         'text': (255, 255, 255),        # white
         'wind_indicator': (211, 211, 211), # light gray
+        'center_wind': (240, 230, 140),  # khaki
         'border': (0, 0, 0),            # black
         'tile': (255, 250, 240),        # floral white
         'honor_tile': (255, 245, 238),  # seashell
@@ -36,9 +37,10 @@ class MahjongVisualizer:
         'riichi_stick': (255, 215, 0)   # gold
     }
 
-    TILE_WIDTH = 30
-    TILE_HEIGHT = 40
-    TILE_SPACING = 5
+    # Increase tile dimensions by 15%
+    TILE_WIDTH = 35  # Was 30
+    TILE_HEIGHT = 46  # Was 40
+    TILE_SPACING = 6  # Was 5
     
     def __init__(self, game_data, width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT):
         self.game_data = game_data
@@ -186,7 +188,7 @@ class MahjongVisualizer:
             if os.path.exists(img_path):
                 # Load and resize the image
                 img = Image.open(img_path)
-                img = img.resize((self.TILE_WIDTH, self.TILE_HEIGHT), Image.LANCZOS)
+                img = img.resize((self.TILE_WIDTH, self.TILE_HEIGHT), Image.Resampling.LANCZOS)
                 # Store in cache
                 self.tile_images[tile_code] = img
         except Exception as e:
@@ -212,9 +214,9 @@ class MahjongVisualizer:
     def draw_game_info(self):
         """Draw game information box"""
         info_width = 280
-        info_height = 200
-        padding = 15
-        
+        info_width = 300
+        info_height = 220
+        padding = 20
         # Position in center right of the screen
         x = self.width - info_width - 30
         y = (self.height - info_height) // 2
@@ -260,7 +262,7 @@ class MahjongVisualizer:
         ]
         
         text_y = separator_y + padding*2
-        line_spacing = 30
+        line_spacing = 35  # Increased line spacing
         
         for label, value in info_items:
             # Draw label
@@ -276,8 +278,8 @@ class MahjongVisualizer:
             value_width = value_bbox[2] - value_bbox[0]
             
             # Calculate maximum width available for the value
-            max_value_width = info_width - padding*4 - 100  # Adjust based on label width
-            
+            # Calculate maximum width available for the value
+            max_value_width = info_width - padding*5 - 110  # Increased margin for better separation
             # If value text is too long, truncate or adjust
             display_value = value
             if value_width > max_value_width:
@@ -360,20 +362,19 @@ class MahjongVisualizer:
         available_width = self.player_width - 20  # Allow for margin
         
         if is_discards:
-            # Draw a separating line above discards for better visual separation
-            self.draw.line(
-                [x, y - 2, x + available_width, y - 2],
-                fill=self.COLORS['border'],
-                width=1
-            )
+            # Remove separating line for cleaner look
             
             # Calculate grid layout for discards
+            # Calculate grid layout for discards - optimized for larger tiles
             max_cols = int(available_width // (self.TILE_WIDTH + self.TILE_SPACING))
             if max_cols < 1:
                 max_cols = 1
                 
-            # Check how many rows we can fit
-            max_rows = int((self.player_height - (y - int(self.player_height * 0.3)) - 10) // (self.TILE_HEIGHT + self.TILE_SPACING))
+            # Ensure we can fit at least 6 tiles per row for up to 18 tiles
+            max_cols = min(max_cols, 6)
+                
+            # Check how many rows we can fit - account for larger tiles
+            max_rows = int((self.player_height - (y - int(self.player_height * 0.3)) - 20) // (self.TILE_HEIGHT + self.TILE_SPACING))
             if max_rows < 1:
                 max_rows = 1
                 
@@ -394,10 +395,13 @@ class MahjongVisualizer:
         else:
             # For hand tiles, calculate how many can fit in a row
             # For hand tiles, calculate how many can fit in a row
+            # For hand tiles, calculate how many can fit in a row - optimized for larger tiles
             tiles_per_row = int(available_width // (self.TILE_WIDTH + self.TILE_SPACING))
             if tiles_per_row < 1:
                 tiles_per_row = 1
-            # Draw hand tiles with potential wrapping
+            
+            # Ensure we can fit at least 6 tiles per row for up to 18 tiles
+            tiles_per_row = min(tiles_per_row, 6)
             for i, tile in enumerate(tiles):
                 row = i // tiles_per_row
                 col = i % tiles_per_row
@@ -413,7 +417,7 @@ class MahjongVisualizer:
         text_width = text_bbox[2] - text_bbox[0]
         text_height = text_bbox[3] - text_bbox[1]
         
-        padding = 4
+        padding = 3  # Reduced padding
         label_width = text_width + 2 * padding
         label_height = text_height + 2 * padding
         
@@ -421,8 +425,7 @@ class MahjongVisualizer:
         self.draw.rectangle(
             [x, y, x + label_width, y + label_height],
             fill=self.COLORS['section_label'],
-            outline=self.COLORS['border'],
-            width=1
+            outline=None  # Remove the border for a cleaner look
         )
         
         # Draw label text
@@ -453,76 +456,144 @@ class MahjongVisualizer:
             [x, y, x + self.player_width, y + self.player_height],
             fill=self.COLORS['winner_zone'] if is_winner else self.COLORS['player_zone'],
             outline=self.COLORS['border'],
-            width=2
+            width=3  # Make the border thicker for better visibility
         )
         
-        # Draw riichi stick if applicable
-        self.draw_riichi_sticks(x, y, player_data.get('riichi', False))
+        # Calculate total available space for content
+        total_available_height = self.player_height - 30  # Allocate space for margins
         
         # Draw player information
-        info_y = y + 20
+        info_y = y + 10  # Reduced top margin
         player_info = [
             f'Player {player_id}' + (' (Winner)' if is_winner else ''),
             f'Wind: {player_data["wind"]}',
             f'Score: {player_data["score"]}'
         ]
         
+        # Draw information box background for better readability
+        text_width = max(self.draw.textbbox((0, 0), line, font=self.font_bold)[2] for line in player_info)
+        text_height = len(player_info) * 25  # Reduced line height
+        info_box_height = text_height + 8  # Reduced padding
+        
+        self.draw.rectangle(
+            [x + 8, info_y - 5, x + text_width + 25, info_y + text_height + 5],
+            fill=self.COLORS['info_box'],
+            outline=self.COLORS['border'],
+            width=1
+        )
+        
         for line in player_info:
             self.draw.text(
-                (x + 10, info_y),
+                (x + 15, info_y),  # Increased left margin
                 line,
                 fill=self.COLORS['text'],
                 font=self.font_bold
             )
-            info_y += 25
+            info_y += 25  # Reduced line spacing
         
-        # Draw hand and discards with clear visual separation
-        hand_y = y + 120  # Increased spacing between score text and hand zone
+        # Draw riichi stick if applicable
+        if player_data.get('riichi', False):
+            self.draw_riichi_sticks(x, y, True)
         
         # Calculate available width for tiles
-        available_width = self.player_width - 20  # Allow for margin
+        available_width = self.player_width - 30  # Increased margin for safety
         
-        # Draw hand area with visual boundary
-        self.draw.rectangle(
-            [x + 5, hand_y - 5, x + self.player_width - 5, hand_y + self.TILE_HEIGHT * 2 + 15],
-            outline=self.COLORS['border'],
-            width=1
-        )
-        self.draw_tiles(x + 10, hand_y, player_data['hand'])
+        # Calculate optimal tiles per row based on available width
+        tiles_per_row = max(1, min(6, int(available_width // (self.TILE_WIDTH + self.TILE_SPACING))))
         
-        # Calculate hand height based on number of tiles and width
-        # Calculate hand height based on number of tiles and width
-        tiles_per_row = int(available_width // (self.TILE_WIDTH + self.TILE_SPACING))
-        if tiles_per_row < 1:
-            tiles_per_row = 1
-        hand_rows = (len(player_data['hand']) + tiles_per_row - 1) // tiles_per_row
-        hand_height = hand_rows * (self.TILE_HEIGHT + self.TILE_SPACING)
+        # Calculate space needed for hand and discards
+        # Start hand zone after info box with padding
+        hand_y = y + info_box_height + 30  # Reduced padding
         
-        # Position discard zone below hand with proper spacing
-        discards_y = hand_y + hand_height + 25  # Add extra spacing for clear separation
+        # Calculate maximum available height for the rest of the content
+        max_remaining_height = self.player_height - (hand_y - y) - 20  # 20px bottom margin
         
-        # Draw discard area with visual boundary if there are discards
+        # Calculate how many rows we can fit for hand tiles
+        max_hand_rows = max(1, (max_remaining_height // 2 - 30) // (self.TILE_HEIGHT + self.TILE_SPACING))
+        
+        # Limit hand rows if we have too many tiles
+        hand_rows_needed = (len(player_data['hand']) + tiles_per_row - 1) // tiles_per_row
+        hand_rows = min(hand_rows_needed, max_hand_rows)
+        
+        # Calculate actual hand height with optimized rows
+        hand_height = hand_rows * (self.TILE_HEIGHT + self.TILE_SPACING) + 20  # Reduced label height
+        
+        # Calculate remaining space after hand
+        remaining_height = max_remaining_height - hand_height - 50  # 50px min spacing
+        # Check if we have discards to display
         if 'discards' in player_data and player_data['discards']:
-            # Calculate maximum height for discards
-            max_discard_height = self.player_height - (discards_y - y) - 10
+            # Calculate discards space requirements
+            discards_tiles = player_data['discards']
+            discards_tiles_per_row = max(1, min(6, int(available_width // (self.TILE_WIDTH + self.TILE_SPACING))))
             
-            # Draw discard zone boundary
-            self.draw.rectangle(
-                [x + 5, discards_y - 5, x + self.player_width - 5, discards_y + max_discard_height],
-                outline=self.COLORS['border'],
-                width=1
-            )
+            # Calculate how many rows we can fit in remaining space
+            max_discard_rows = max(1, (remaining_height - 20) // (self.TILE_HEIGHT + self.TILE_SPACING))
             
-            # Draw connecting line between zones
-            # Draw connecting line between zones
-            self.draw.line(
-                [x + int(self.player_width // 2), hand_y + hand_height + 5, 
-                 x + int(self.player_width // 2), discards_y - 5],
-                fill=self.COLORS['border'],
-                width=1
-            )
+            # Limit discard rows if we have too many tiles
+            discard_rows_needed = (len(discards_tiles) + discards_tiles_per_row - 1) // discards_tiles_per_row
+            discard_rows = min(discard_rows_needed, max_discard_rows)
             
-            self.draw_tiles(x + 10, discards_y, player_data['discards'], True)
+            # Calculate actual discards height with optimized rows
+            discards_height = discard_rows * (self.TILE_HEIGHT + self.TILE_SPACING) + 20  # Reduced label height
+            
+            # Ensure minimum spacing between hand and discards (at least 50px)
+            min_spacing = 50
+            
+            # Calculate discards position with sufficient spacing
+            discards_y = hand_y + hand_height + min_spacing
+            # Strict boundary check for discards zone
+            if (discards_y + discards_height) > (y + self.player_height - 10):
+                # Emergency adjustment - reduce spacing if still too tight
+                if min_spacing > 30:
+                    min_spacing = 30
+                    discards_y = hand_y + hand_height + min_spacing
+                
+                # Final check to ensure we're within boundaries
+                max_allowed_height = (y + self.player_height - 10) - discards_y
+                max_allowed_rows = max(1, int(max_allowed_height - 20) // (self.TILE_HEIGHT + self.TILE_SPACING))
+                
+                # Adjust display if still not enough space
+                if max_allowed_rows < discard_rows:
+                    discard_rows = max_allowed_rows
+                    
+                    # Add an indicator that not all discards are shown
+                    truncated_message = f"(Showing {max_allowed_rows * discards_tiles_per_row} of {len(discards_tiles)} discards)"
+                    self.draw.text(
+                        (x + 15, discards_y - 15),
+                        truncated_message,
+                        fill=self.COLORS['text'],
+                        font=self.font_small
+                    )
+            
+            # Draw hand tiles first
+            self.draw_tiles(x + 15, hand_y, player_data['hand'])
+            
+            # Draw discards below with proper spacing
+            self.draw_tiles(x + 15, discards_y, player_data['discards'], True)
+            
+            # Limit the number of discards shown based on available space
+            tiles_to_show = min(len(discards_tiles), discard_rows * discards_tiles_per_row)
+            
+            # Draw hand tiles first
+            self.draw_tiles(x + 15, hand_y, player_data['hand'][:hand_rows * tiles_per_row])
+            
+            # Draw discards below with proper spacing
+            self.draw_tiles(x + 15, discards_y, discards_tiles[:tiles_to_show], True)
+            
+            # Draw debug measurements if needed - uncomment for debugging
+            # debug_color = (255, 0, 0)  # red
+            # self.draw.line([x + 5, y + self.player_height - 10, x + self.player_width - 5, y + self.player_height - 10], fill=debug_color, width=2)
+            # self.draw.line([x + 5, hand_y, x + self.player_width - 5, hand_y], fill=debug_color, width=1)
+            # self.draw.line([x + 5, hand_y + hand_height, x + self.player_width - 5, hand_y + hand_height], fill=debug_color, width=1)
+            # self.draw.line([x + 5, discards_y, x + self.player_width - 5, discards_y], fill=debug_color, width=1)
+            # self.draw.line([x + 5, discards_y + discards_height, x + self.player_width - 5, discards_y + discards_height], fill=debug_color, width=1)
+        else:
+            # Only hand tiles to draw - can use more space
+            max_hand_rows = max(1, (max_remaining_height - 20) // (self.TILE_HEIGHT + self.TILE_SPACING))
+            hand_rows = min((len(player_data['hand']) + tiles_per_row - 1) // tiles_per_row, max_hand_rows)
+            tiles_to_show = min(len(player_data['hand']), hand_rows * tiles_per_row)
+            
+            self.draw_tiles(x + 15, hand_y, player_data['hand'][:tiles_to_show])
 
     def draw_all_player_zones(self):
         """Draw all player zones"""
@@ -545,9 +616,59 @@ class MahjongVisualizer:
             if player_id in self.game_data['players']:
                 self.draw_player_zone(player_id, position)
 
+    def draw_center_wind(self):
+        """Draw the round wind in the center of the board"""
+        wind = self.game_data['round_wind']
+        
+        # Create a circular background for the wind indicator
+        circle_radius = 140  # Larger circle for more prominence
+        
+        # Draw circle background
+        self.draw.ellipse(
+            (self.center_x - circle_radius, 
+             self.center_y - circle_radius,
+             self.center_x + circle_radius, 
+             self.center_y + circle_radius),
+            fill=self.COLORS['center_wind'],
+            outline=self.COLORS['border'],
+            width=4  # Thicker outline for better visibility
+        )
+        
+        # Draw wind character - get appropriate large font
+        try:
+            wind_font = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', 120)  # Larger font for better prominence
+        except:
+            wind_font = self.font_info
+        
+        # Draw wind text
+        wind_text = wind
+        text_bbox = self.draw.textbbox((0, 0), wind_text, font=wind_font)
+        text_width = text_bbox[2] - text_bbox[0]
+        text_height = text_bbox[3] - text_bbox[1]
+        
+        self.draw.text(
+            (self.center_x - text_width // 2, self.center_y - text_height // 2),
+            wind_text,
+            fill=self.COLORS['border'],
+            font=wind_font
+        )
+        
+        # Add "Round Wind" text below the circle
+        label_text = "Round Wind"
+        label_bbox = self.draw.textbbox((0, 0), label_text, font=self.font_bold)
+        label_width = label_bbox[2] - label_bbox[0]
+        
+        self.draw.text(
+            (self.center_x - label_width // 2, self.center_y + circle_radius + 10),
+            label_text,
+            fill=self.COLORS['text'],
+            font=self.font_info  # Use larger font for better visibility
+        )
+
     def generate(self, output_path):
         """Generate the visualization"""
         self.draw_all_player_zones()
+        self.draw_center_wind()
         self.draw_game_info()
         self.image.save(output_path)
 
