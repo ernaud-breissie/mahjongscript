@@ -1,0 +1,42 @@
+{
+    "dimensions": {
+        "width": 1200,
+        "height": 1000
+    },
+    "zones": {
+        "central_wind": {
+            "x": 525.0,
+            "y": 425.0,
+            "width": 150.0,
+            "height": 150.0
+        },
+        "player_1": {
+            "x": 840.0,
+            "y": 0,
+            "width": 360.0,
+            "height": 300.0,
+            "position": "top_right"
+        },
+        "player_2": {
+            "x": 840.0,
+            "y": 700.0,
+            "width": 360.0,
+            "height": 300.0,
+            "position": "bottom_right"
+        },
+        "player_3": {
+            "x": 0,
+            "y": 700.0,
+            "width": 360.0,
+            "height": 300.0,
+            "position": "bottom_left"
+        },
+        "player_4": {
+            "x": 0,
+            "y": 0,
+            "width": 360.0,
+            "height": 300.0,
+            "position": "top_left"
+        }
+    }
+}

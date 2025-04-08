@@ -1,0 +1,14 @@
+{
+    "dimensions": {
+        "width": 1200,
+        "height": 1000
+    },
+    "zones": {
+        "central_wind": {
+            "x": 525.0,
+            "y": 425.0,
+            "width": 150.0,
+            "height": 150.0
+        }
+    }
+}

@@ -1,0 +1,36 @@
+{
+    "round_wind": "E",
+    "players": {
+        "1": {
+            "wind": "E",
+            "score": 25000,
+            "hand": ["M1", "M2", "M3", "P5", "P6", "P7", "S2", "S3", "S4", "E", "E", "E", "N"],
+            "discards": ["M7", "P3", "S9"],
+            "riichi": false
+        },
+        "2": {
+            "wind": "S",
+            "score": 24000,
+            "hand": ["M4", "M5", "M6", "P1", "P1", "P1", "S5", "S6", "S7", "W", "W", "W"],
+            "discards": ["M9", "P4", "S1", "N"],
+            "riichi": true
+        },
+        "3": {
+            "wind": "W",
+            "score": 26000,
+            "hand": ["M7", "M8", "M9", "P2", "P3", "P4", "S8", "S9", "N", "N", "N", "S", "S"],
+            "discards": ["M2", "P8"],
+            "riichi": false
+        },
+        "4": {
+            "wind": "N",
+            "score": 25000,
+            "hand": ["M1", "M1", "M1", "P8", "P9", "S1", "S1", "S1", "S", "S", "S", "E", "E"],
+            "discards": ["M6", "P7", "S2"],
+            "riichi": false
+        }
+    },
+    "winner_id": "2",
+    "legend": "Example mahjong game with player 2 winning"
+}
+

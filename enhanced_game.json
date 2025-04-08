@@ -1,0 +1,36 @@
+{
+    "round_wind": "S",
+    "honba": 2,
+    "players": {
+        "1": {
+            "wind": "E",
+            "score": 18500,
+            "hand": ["M1", "M2", "M3", "M4", "M5", "M6", "M7", "M8", "M9"],
+            "discards": ["S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", "P4", "P5", "P6", "P7", "P8", "P9", "E", "S", "W", "N"],
+            "riichi": false
+        },
+        "2": {
+            "wind": "S",
+            "score": 24300,
+            "hand": ["P1", "P1", "P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P9"],
+            "discards": ["M1", "M2", "M3", "S1", "S2", "S3", "W", "W", "N"],
+            "riichi": true
+        },
+        "3": {
+            "wind": "W",
+            "score": 26000,
+            "hand": ["S1", "S1", "S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", "S9", "S9"],
+            "discards": ["M1", "M2", "M3", "P1", "P2", "E", "E", "S"],
+            "riichi": true
+        },
+        "4": {
+            "wind": "N",
+            "score": 31200,
+            "hand": ["E", "E", "E", "S", "S", "S", "W", "W", "W", "N", "N", "N", "G"],
+            "discards": ["M2", "M3", "M4", "P1", "P2", "P3", "S1", "S2", "R", "W"],
+            "riichi": false
+        }
+    },
+    "winner_id": "4",
+    "legend": "Complex game state with multiple riichi bets and honor tiles"
+}
