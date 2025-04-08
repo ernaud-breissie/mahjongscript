@@ -14,8 +14,8 @@ class InvalidInputError(MahjongVisualizerError):
     pass
 
 class MahjongVisualizer:
-    DEFAULT_WIDTH = 1200
-    DEFAULT_HEIGHT = 1000
+    DEFAULT_WIDTH = 1400
+    DEFAULT_HEIGHT = 1200
     
     # Cache for loaded tile images
     tile_images = {}
@@ -47,8 +47,8 @@ class MahjongVisualizer:
         self.height = height
         self.center_x = self.width // 2
         self.center_y = self.height // 2
-        self.player_width = int(self.width * 0.3)
-        self.player_height = int(self.height * 0.3)
+        self.player_width = int(self.width * 0.35)
+        self.player_height = int(self.height * 0.35)
         
         # Initialize the image with background color
         self.image = Image.new('RGB', (self.width, self.height), self.COLORS['background'])
@@ -59,10 +59,14 @@ class MahjongVisualizer:
             self.font_normal = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', 16)
             self.font_bold = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', 20)
             self.font_small = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', 14)
+            self.font_info = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', 24)
+            self.font_info_normal = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', 18)
         except:
             self.font_normal = ImageFont.load_default()
             self.font_bold = ImageFont.load_default()
             self.font_small = ImageFont.load_default()
+            self.font_info = ImageFont.load_default()
+            self.font_info_normal = ImageFont.load_default()
         
         # Preload tile images
         # Preload tile images
@@ -207,16 +211,12 @@ class MahjongVisualizer:
 
     def draw_game_info(self):
         """Draw game information box"""
-        info_width = 200
-        info_height = 120
-        padding = 10
+        info_width = 280
+        info_height = 200
+        padding = 15
         
         # Position in center right of the screen
-        x = self.width - info_width - 20
-        y = (self.height - info_height) // 2
-        
-        # Position in center right of the screen
-        x = self.width - info_width - 20
+        x = self.width - info_width - 30
         y = (self.height - info_height) // 2
         
         # Draw info box
@@ -224,31 +224,74 @@ class MahjongVisualizer:
             [x, y, x + info_width, y + info_height],
             fill=self.COLORS['info_box'],
             outline=self.COLORS['border'],
-            width=2
+            width=3
         )
         
         # Calculate game information
         remaining_tiles = self.calculate_remaining_tiles()
         riichi_bets = self.count_riichi_bets()
         
+        # Draw title
+        title = "Game Information"
+        title_bbox = self.draw.textbbox((0, 0), title, font=self.font_info)
+        title_width = title_bbox[2] - title_bbox[0]
+        
+        self.draw.text(
+            (x + (info_width - title_width) // 2, y + padding),
+            title,
+            fill=self.COLORS['text'],
+            font=self.font_info
+        )
+        
+        # Draw separator line
+        separator_y = y + padding*3
+        self.draw.line(
+            [x + padding, separator_y, x + info_width - padding, separator_y],
+            fill=self.COLORS['text'],
+            width=2
+        )
+        
         # Draw information text
-        info_text = [
-            "Game Information:",
-            f"Round: {self.game_data['round_wind']}",
-            f"Remaining: {remaining_tiles}",
-            f"Riichi Bets: {riichi_bets}",
-            f"Honba: {self.game_data.get('honba', 0)}"
+        info_items = [
+            ["Round:", f"{self.game_data['round_wind']}"],
+            ["Remaining:", f"{remaining_tiles}"],
+            ["Riichi Bets:", f"{riichi_bets}"],
+            ["Honba:", f"{self.game_data.get('honba', 0)}"]
         ]
         
-        text_y = y + padding
-        for line in info_text:
+        text_y = separator_y + padding*2
+        line_spacing = 30
+        
+        for label, value in info_items:
+            # Draw label
             self.draw.text(
-                (x + padding, text_y),
-                line,
+                (x + padding*2, text_y),
+                label,
                 fill=self.COLORS['text'],
-                font=self.font_normal
+                font=self.font_info_normal
             )
-            text_y += 25
+            
+            # Calculate value text dimensions to ensure it stays within bounds
+            value_bbox = self.draw.textbbox((0, 0), value, font=self.font_info_normal)
+            value_width = value_bbox[2] - value_bbox[0]
+            
+            # Calculate maximum width available for the value
+            max_value_width = info_width - padding*4 - 100  # Adjust based on label width
+            
+            # If value text is too long, truncate or adjust
+            display_value = value
+            if value_width > max_value_width:
+                display_value = value[:10] + "..."  # Simple truncation approach
+            
+            # Draw value text
+            self.draw.text(
+                (x + info_width - padding*2 - value_width, text_y),
+                display_value,
+                fill=self.COLORS['text'],
+                font=self.font_info_normal
+            )
+            
+            text_y += line_spacing
 
     def draw_riichi_sticks(self, player_x, player_y, is_riichi):
         """Draw riichi stick indication"""
@@ -434,7 +477,7 @@ class MahjongVisualizer:
             info_y += 25
         
         # Draw hand and discards with clear visual separation
-        hand_y = y + 90
+        hand_y = y + 120  # Increased spacing between score text and hand zone
         
         # Calculate available width for tiles
         available_width = self.player_width - 20  # Allow for margin
