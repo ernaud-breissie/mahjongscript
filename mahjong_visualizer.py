@@ -1,25 +1,40 @@
-import json
-import sys
-from PIL import Image, ImageDraw, ImageFont
-from pathlib import Path
+# Import necessary libraries
+import json  # For parsing input game data in JSON format
+import sys   # For command line argument handling and error codes
+from PIL import Image, ImageDraw, ImageFont  # Pillow library for image creation and manipulation
+from pathlib import Path  # For path handling
 import os
-import os.path
+import os.path  # For file operations and path management
 
 class MahjongVisualizerError(Exception):
-    """Base exception for MahjongVisualizer"""
+    """Base exception for MahjongVisualizer
+    
+    Serves as the parent class for all custom exceptions in the visualizer.
+    Allows for catching all visualizer-specific errors with a single except block.
+    """
     pass
 
 class InvalidInputError(MahjongVisualizerError):
-    """Raised when input JSON is invalid"""
+    """Raised when input JSON is invalid
+    
+    Used when the input game data has formatting or structure issues.
+    """
     pass
 
 class MahjongVisualizer:
-    DEFAULT_WIDTH = 1400
-    DEFAULT_HEIGHT = 1200
+    """Main class for creating a mahjong game state visualization
     
-    # Cache for loaded tile images
+    This class handles all aspects of rendering a mahjong game state to an image,
+    including player hands, discards, game information, and layout calculations.
+    """
+    # Default dimensions for the output image
+    DEFAULT_WIDTH = 1400  # Width in pixels
+    DEFAULT_HEIGHT = 1200  # Height in pixels
+    
+    # Cache for loaded tile images to avoid reloading the same tiles
     tile_images = {}
     
+    # Color scheme for the visualization elements
     COLORS = {
         'background': (0, 100, 0),      # dark green
         'player_zone': (34, 139, 34),   # forest green
@@ -37,18 +52,29 @@ class MahjongVisualizer:
         'riichi_stick': (255, 215, 0)   # gold
     }
 
-    # Increase tile dimensions by 15%
-    TILE_WIDTH = 35  # Was 30
-    TILE_HEIGHT = 46  # Was 40
-    TILE_SPACING = 6  # Was 5
+    # Tile dimensions in pixels - enlarged by 15% from original values for better visibility
+    TILE_WIDTH = 35    # Width of each mahjong tile (was 30)
+    TILE_HEIGHT = 46   # Height of each mahjong tile (was 40)
+    TILE_SPACING = 6   # Spacing between tiles (was 5)
     
     def __init__(self, game_data, width=DEFAULT_WIDTH, height=DEFAULT_HEIGHT):
+        """Initialize the MahjongVisualizer
+        
+        Args:
+            game_data: Dictionary containing the mahjong game state
+            width: Width of the output image in pixels
+            height: Height of the output image in pixels
+        """
         self.game_data = game_data
+        # Validate input data structure
         self.validate_game_data(self.game_data)
+        # Set image dimensions
         self.width = width
         self.height = height
+        # Calculate center coordinates for image
         self.center_x = self.width // 2
         self.center_y = self.height // 2
+        # Calculate player zone dimensions - each player gets 35% of width/height
         self.player_width = int(self.width * 0.35)
         self.player_height = int(self.height * 0.35)
         
@@ -56,7 +82,7 @@ class MahjongVisualizer:
         self.image = Image.new('RGB', (self.width, self.height), self.COLORS['background'])
         self.draw = ImageDraw.Draw(self.image)
         
-        # Try to load fonts
+        # Try to load fonts - using DejaVu fonts which are common on Linux distributions
         try:
             self.font_normal = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', 16)
             self.font_bold = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', 20)
@@ -75,7 +101,20 @@ class MahjongVisualizer:
         self.load_tile_images()
 
     def validate_game_data(self, data):
-        """Validate the game data structure"""
+        """Validate the game data structure
+        
+        Checks that the game data has the required fields and structure.
+        Raises InvalidInputError if the data doesn't meet requirements.
+        
+        Args:
+            data: Dictionary containing the game state to validate
+            
+        Returns:
+            True if the data is valid
+            
+        Raises:
+            InvalidInputError: If the data structure is invalid
+        """
         # Check required top-level keys
         if not isinstance(data, dict):
             raise InvalidInputError("Game data must be a dictionary")
@@ -86,13 +125,14 @@ class MahjongVisualizer:
         if 'round_wind' not in data:
             raise InvalidInputError("Game data missing 'round_wind' field")
             
-        # Validate players
+        # Validate players section
         if not isinstance(data['players'], dict):
             raise InvalidInputError("Players data must be a dictionary")
             
         if not data['players']:
             raise InvalidInputError("Players data cannot be empty")
             
+        # Validate each player's data structure
         for player_id, player_data in data['players'].items():
             # Check player data structure
             if not isinstance(player_data, dict):
@@ -127,16 +167,27 @@ class MahjongVisualizer:
         return True
 
     def get_tile_image_filename(self, tile):
+        """Map a tile code to its corresponding image filename
+        
+        Converts tile codes (like 'M1', 'P2', 'E') to their respective image filenames.
+        
+        Args:
+            tile: String tile code ('M1'-'M9' for Man/Characters, 'P1'-'P9' for Pin/Dots,
+                 'S1'-'S9' for Sou/Bamboo, 'E'/'S'/'W'/'N' for winds)
+                 
+        Returns:
+            String filename for the tile image, or None if not recognized
+        """
         if len(tile) == 1:
             # Honor tile (wind or dragon)
             if tile == 'E':
-                return "Ton-bordered-lettered.png"
+                return "Ton-bordered-lettered.png"  # East wind
             elif tile == 'S':
-                return "Nan-bordered-lettered.png"
+                return "Nan-bordered-lettered.png"  # South wind
             elif tile == 'W':
-                return "Shaa-bordered-lettered.png"
+                return "Shaa-bordered-lettered.png"  # West wind
             elif tile == 'N':
-                return "Pei-bordered-lettered.png"
+                return "Pei-bordered-lettered.png"  # North wind
             else:
                 # Default case if unknown
                 return None
@@ -146,43 +197,56 @@ class MahjongVisualizer:
             number = tile[1]
             
             if suit == 'M':
-                return f"Man{number}-bordered-numbered.png"
+                return f"Man{number}-bordered-numbered.png"  # Man/Character suit
             elif suit == 'P':
-                return f"Pin{number}-bordered-numbered.png"
+                return f"Pin{number}-bordered-numbered.png"  # Pin/Dots suit
             elif suit == 'S':
-                return f"Sou{number}-bordered-numbered.png"
+                return f"Sou{number}-bordered-numbered.png"  # Sou/Bamboo suit
             else:
                 return None
         return None
 
     def load_tile_images(self):
-        """Load and cache all tile images"""
+        """Load and cache all tile images
+        
+        Preloads all possible tile images from the img directory to avoid
+        loading them repeatedly during rendering. Images are stored in the
+        tile_images class dictionary.
+        """
         # Man (Characters) 1-9
         for i in range(1, 10):
-            tile_code = f"M{i}"
+            tile_code = f"M{i}"  # M1, M2, ..., M9
             filename = f"Man{i}-bordered-numbered.png"
             self.load_and_cache_tile_image(tile_code, filename)
         
         # Pin (Dots) 1-9
         for i in range(1, 10):
-            tile_code = f"P{i}"
+            tile_code = f"P{i}"  # P1, P2, ..., P9
             filename = f"Pin{i}-bordered-numbered.png"
             self.load_and_cache_tile_image(tile_code, filename)
         
         # Sou (Bamboo) 1-9
         for i in range(1, 10):
-            tile_code = f"S{i}"
+            tile_code = f"S{i}"  # S1, S2, ..., S9
             filename = f"Sou{i}-bordered-numbered.png"
             self.load_and_cache_tile_image(tile_code, filename)
         
-        # Honor tiles - Winds
+        # Honor tiles - Winds (East, South, West, North)
         self.load_and_cache_tile_image("E", "Ton-bordered-lettered.png")
         self.load_and_cache_tile_image("S", "Nan-bordered-lettered.png")
         self.load_and_cache_tile_image("W", "Shaa-bordered-lettered.png")
         self.load_and_cache_tile_image("N", "Pei-bordered-lettered.png")
 
     def load_and_cache_tile_image(self, tile_code, filename):
-        """Load a single tile image and cache it"""
+        """Load a single tile image and cache it
+        
+        Loads an image from the img directory, resizes it to the current
+        tile dimensions, and stores it in the tile_images cache.
+        
+        Args:
+            tile_code: String identifier for the tile (e.g. 'M1', 'P5', 'E')
+            filename: Name of the image file to load from the img directory
+        """
         try:
             img_path = os.path.join("img", filename)
             if os.path.exists(img_path):
@@ -191,6 +255,8 @@ class MahjongVisualizer:
                 img = img.resize((self.TILE_WIDTH, self.TILE_HEIGHT), Image.Resampling.LANCZOS)
                 # Store in cache
                 self.tile_images[tile_code] = img
+            else:
+                print(f"Warning: Tile image file not found: {img_path}")
         except Exception as e:
             print(f"Warning: Failed to load tile image {filename}: {e}")
 
@@ -215,7 +281,7 @@ class MahjongVisualizer:
         """Draw game information box"""
         info_width = 280
         info_width = 300
-        info_height = 220
+        info_height = 260
         padding = 20
         # Position in center right of the screen
         x = self.width - info_width - 30
@@ -262,7 +328,7 @@ class MahjongVisualizer:
         ]
         
         text_y = separator_y + padding*2
-        line_spacing = 35  # Increased line spacing
+        line_spacing = 40  # Increased line spacing
         
         for label, value in info_items:
             # Draw label
@@ -294,6 +360,8 @@ class MahjongVisualizer:
             )
             
             text_y += line_spacing
+        
+        # Add extra padding at the bottom of the info box
 
     def draw_riichi_sticks(self, player_x, player_y, is_riichi):
         """Draw riichi stick indication"""
@@ -371,8 +439,8 @@ class MahjongVisualizer:
                 max_cols = 1
                 
             # Ensure we can fit at least 6 tiles per row for up to 18 tiles
-            max_cols = min(max_cols, 6)
-                
+            # Ensure we can fit at least 10 tiles per row for up to 18 tiles
+            max_cols = min(max_cols, 10)
             # Check how many rows we can fit - account for larger tiles
             max_rows = int((self.player_height - (y - int(self.player_height * 0.3)) - 20) // (self.TILE_HEIGHT + self.TILE_SPACING))
             if max_rows < 1:
@@ -400,8 +468,8 @@ class MahjongVisualizer:
             if tiles_per_row < 1:
                 tiles_per_row = 1
             
-            # Ensure we can fit at least 6 tiles per row for up to 18 tiles
-            tiles_per_row = min(tiles_per_row, 6)
+            # Ensure we can fit at least 10 tiles per row for up to 18 tiles
+            tiles_per_row = min(tiles_per_row, 10)
             for i, tile in enumerate(tiles):
                 row = i // tiles_per_row
                 col = i % tiles_per_row
@@ -499,8 +567,8 @@ class MahjongVisualizer:
         available_width = self.player_width - 30  # Increased margin for safety
         
         # Calculate optimal tiles per row based on available width
-        tiles_per_row = max(1, min(6, int(available_width // (self.TILE_WIDTH + self.TILE_SPACING))))
-        
+        # Calculate optimal tiles per row based on available width
+        tiles_per_row = max(1, min(10, int(available_width // (self.TILE_WIDTH + self.TILE_SPACING))))
         # Calculate space needed for hand and discards
         # Start hand zone after info box with padding
         hand_y = y + info_box_height + 30  # Reduced padding
@@ -524,8 +592,8 @@ class MahjongVisualizer:
         if 'discards' in player_data and player_data['discards']:
             # Calculate discards space requirements
             discards_tiles = player_data['discards']
-            discards_tiles_per_row = max(1, min(6, int(available_width // (self.TILE_WIDTH + self.TILE_SPACING))))
-            
+            discards_tiles = player_data['discards']
+            discards_tiles_per_row = max(1, min(10, int(available_width // (self.TILE_WIDTH + self.TILE_SPACING))))
             # Calculate how many rows we can fit in remaining space
             max_discard_rows = max(1, (remaining_height - 20) // (self.TILE_HEIGHT + self.TILE_SPACING))
             
