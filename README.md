@@ -362,7 +362,7 @@ The debug JSON file contains:
 
 Below are examples of different game state visualizations:
 
-#### 4-Player Game Layout
+#### Standard 4-Player Game
 ![4-Player Game](test_4players_final.png)
 *Standard 4-player game layout showing:*
 - All four player positions (East, South, West, North)
@@ -370,8 +370,10 @@ Below are examples of different game state visualizations:
 - Score displays and wind indicators
 - Central round wind
 - Game information panel
+- Riichi declaration indicators
+- Clear tile arrangements and spacing
 
-#### 3-Player Game Layout
+#### Standard 3-Player Game
 ![3-Player Game](test_3players_final.png)
 *3-player variant showing:*
 - Modified layout with three player positions
@@ -379,15 +381,8 @@ Below are examples of different game state visualizations:
 - Extended discard areas
 - Riichi indicator for Player 2
 - Honba counter in game info
-
-#### Detailed Tile View
-![Detailed Layout](test_layout_large_tiles_standard.png)
-*Detailed view demonstrating:*
-- High-resolution tile images
-- Clear tile separation and positioning
-- Multiple tile types (numbered and honor tiles)
-- Organized hand and discard layouts
-- Player zone formatting
+- Grid-based discard arrangement
+- Efficient space utilization
 
 The visualizer automatically adjusts its layout and scaling based on:
 - Number of players (3 or 4)
