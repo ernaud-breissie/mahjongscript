@@ -358,6 +358,46 @@ The debug JSON file contains:
 - Player positions
 - Layout information for all visual elements
 
+### Output Examples
+
+Below are examples of different game state visualizations:
+
+#### 4-Player Game Layout
+![4-Player Game](test_4players_final.png)
+*Standard 4-player game layout showing:*
+- All four player positions (East, South, West, North)
+- Hand tiles and discards for each player
+- Score displays and wind indicators
+- Central round wind
+- Game information panel
+
+#### 3-Player Game Layout
+![3-Player Game](test_3players_final.png)
+*3-player variant showing:*
+- Modified layout with three player positions
+- Larger hand sizes (16 tiles)
+- Extended discard areas
+- Riichi indicator for Player 2
+- Honba counter in game info
+
+#### Detailed Tile View
+![Detailed Layout](test_layout_large_tiles_standard.png)
+*Detailed view demonstrating:*
+- High-resolution tile images
+- Clear tile separation and positioning
+- Multiple tile types (numbered and honor tiles)
+- Organized hand and discard layouts
+- Player zone formatting
+
+The visualizer automatically adjusts its layout and scaling based on:
+- Number of players (3 or 4)
+- Hand sizes
+- Number of discards
+- Screen resolution and dimensions
+- Special game states (riichi, winner)
+
+Each visualization includes a game information panel showing the round wind, remaining tiles, riichi bets, and other relevant game details.
+
 ## Configuration
 
 ### Visual Elements
