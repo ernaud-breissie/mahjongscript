@@ -363,7 +363,6 @@ The debug JSON file contains:
 Below are examples of different game state visualizations:
 
 #### Standard 4-Player Game
-![4-Player Game](test_4players_final.png)
 *Standard 4-player game layout showing:*
 - All four player positions (East, South, West, North)
 - Hand tiles and discards for each player
@@ -374,7 +373,6 @@ Below are examples of different game state visualizations:
 - Clear tile arrangements and spacing
 
 #### Standard 3-Player Game
-![3-Player Game](test_3players_final.png)
 *3-player variant showing:*
 - Modified layout with three player positions
 - Larger hand sizes (16 tiles)
